@@ -100,8 +100,13 @@ public class LoginPage extends JFrame implements ActionListener {
 }
 
 class DashboardPage extends JFrame implements ActionListener {
-    private JTextField studentIdField, addressField;
-    private JComboBox<String> genderComboBox;
+    private JTextField studentIdField, nameField;
+    private JTextArea addressArea;
+    private JScrollPane addressScrollPane;
+    private JRadioButton maleRadio, femaleRadio, otherRadio;
+    private ButtonGroup genderGroup;
+    private JPanel genderPanel;
+    private JComboBox<String> departmentComboBox;
     private JButton saveButton;
     private JLabel statusLabel;
     private String username;
@@ -114,31 +119,59 @@ class DashboardPage extends JFrame implements ActionListener {
         this.username = username;
         
         setTitle("Student Dashboard");
-        setSize(400, 300);
+        setSize(500, 400);  // Made larger to accommodate new fields
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new GridLayout(5, 2, 10, 10));
+        setLayout(new GridLayout(7, 2, 10, 10));  // Changed from 5 to 7 rows
 
         // Welcome message
         JLabel welcomeLabel = new JLabel("Welcome to the Dashboard!", JLabel.CENTER);
         add(welcomeLabel);
         add(new JLabel());
 
+        // Name field
+        add(new JLabel("Full Name:"));
+        nameField = new JTextField();
+        add(nameField);
+
         // Student ID
         add(new JLabel("Student ID:"));
         studentIdField = new JTextField();
         add(studentIdField);
 
-        // Gender selection
+        // Gender selection with radio buttons
         add(new JLabel("Gender:"));
-        String[] genders = {"Select Gender", "Male", "Female"};
-        genderComboBox = new JComboBox<>(genders);
-        add(genderComboBox);
+        genderPanel = new JPanel();
+        genderGroup = new ButtonGroup();
+        
+        maleRadio = new JRadioButton("Male");
+        femaleRadio = new JRadioButton("Female");
+        otherRadio = new JRadioButton("Other");
+        
+        genderGroup.add(maleRadio);
+        genderGroup.add(femaleRadio);
+        genderGroup.add(otherRadio);
+        
+        genderPanel.add(maleRadio);
+        genderPanel.add(femaleRadio);
+        genderPanel.add(otherRadio);
+        add(genderPanel);
+        
+        // Department selection
+        add(new JLabel("Department:"));
+        String[] departments = {"Select Department", "Computer Engineering", "Software Engineering", 
+                               "Mathematics", "Physics", "Engineering"};
+        departmentComboBox = new JComboBox<>(departments);
+        add(departmentComboBox);
 
-        // Address
+        // Address with scrollpane
         add(new JLabel("Address:"));
-        addressField = new JTextField();
-        add(addressField);
+        addressArea = new JTextArea(3, 20);
+        addressArea.setLineWrap(true);
+        addressArea.setWrapStyleWord(true);
+        addressScrollPane = new JScrollPane(addressArea);
+        addressScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        add(addressScrollPane);
 
         // Save button
         saveButton = new JButton("Save Information");
@@ -165,19 +198,31 @@ class DashboardPage extends JFrame implements ActionListener {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(":");
-                if (parts.length >= 4 && parts[0].equals(username)) {
+                if (parts.length >= 6 && parts[0].equals(username)) {
                     // Found record for this username
-                    studentIdField.setText(parts[1]);
+                    nameField.setText(parts[1]);
+                    studentIdField.setText(parts[2]);
                     
-                    // Set gender in combo box
-                    for (int i = 0; i < genderComboBox.getItemCount(); i++) {
-                        if (genderComboBox.getItemAt(i).equals(parts[2])) {
-                            genderComboBox.setSelectedIndex(i);
+                    // Set gender radio button
+                    String gender = parts[3];
+                    if (gender.equals("Male")) {
+                        maleRadio.setSelected(true);
+                    } else if (gender.equals("Female")) {
+                        femaleRadio.setSelected(true);
+                    } else {
+                        otherRadio.setSelected(true);
+                    }
+                    
+                    // Set department
+                    String department = parts[4];
+                    for (int i = 0; i < departmentComboBox.getItemCount(); i++) {
+                        if (departmentComboBox.getItemAt(i).equals(department)) {
+                            departmentComboBox.setSelectedIndex(i);
                             break;
                         }
                     }
                     
-                    addressField.setText(parts[3]);
+                    addressArea.setText(parts[5]);
                     break;
                 }
             }
@@ -193,19 +238,43 @@ class DashboardPage extends JFrame implements ActionListener {
         }
     }
 
+    private String getSelectedGender() {
+        if (maleRadio.isSelected()) {
+            return "Male";
+        } else if (femaleRadio.isSelected()) {
+            return "Female";
+        } else if (otherRadio.isSelected()) {
+            return "Other";
+        } else {
+            return "";
+        }
+    }
+
     private void saveStudentInfo() {
+        String name = nameField.getText().trim();
         String studentId = studentIdField.getText().trim();
-        String gender = genderComboBox.getSelectedItem().toString();
-        String address = addressField.getText().trim();
+        String gender = getSelectedGender();
+        String department = departmentComboBox.getSelectedItem().toString();
+        String address = addressArea.getText().trim();
         
         // Validate inputs
+        if (name.isEmpty()) {
+            statusLabel.setText("Please enter your full name");
+            return;
+        }
+        
         if (studentId.isEmpty()) {
             statusLabel.setText("Please enter a student ID");
             return;
         }
         
-        if (gender.equals("Select Gender")) {
+        if (gender.isEmpty()) {
             statusLabel.setText("Please select a gender");
+            return;
+        }
+        
+        if (department.equals("Select Department")) {
+            statusLabel.setText("Please select a department");
             return;
         }
         
@@ -224,9 +293,10 @@ class DashboardPage extends JFrame implements ActionListener {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     String[] parts = line.split(":");
-                    if (parts.length >= 4 && parts[0].equals(username)) {
+                    if (parts.length >= 6 && parts[0].equals(username)) {
                         // Replace existing record
-                        lines.add(username + ":" + studentId + ":" + gender + ":" + address);
+                        lines.add(username + ":" + name + ":" + studentId + ":" + gender + ":" + 
+                                 department + ":" + address.replace("\n", "\\n"));
                         recordUpdated = true;
                     } else {
                         lines.add(line);
@@ -240,7 +310,8 @@ class DashboardPage extends JFrame implements ActionListener {
         
         // If record wasn't updated, add a new one
         if (!recordUpdated) {
-            lines.add(username + ":" + studentId + ":" + gender + ":" + address);
+            lines.add(username + ":" + name + ":" + studentId + ":" + gender + ":" + 
+                     department + ":" + address.replace("\n", "\\n"));
         }
         
         // Write all records back to file
@@ -257,16 +328,16 @@ class DashboardPage extends JFrame implements ActionListener {
 
 class RegisterPage extends JFrame {
     private JTextField usernameField;
-    private JPasswordField passwordField;
+    private JPasswordField passwordField, confirmPasswordField;
     private JButton registerButton;
     private JLabel statusLabel;
 
     public RegisterPage() {
         setTitle("Register");
-        setSize(350, 200);
+        setSize(350, 250);  // Made taller to accommodate new field
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new GridLayout(4, 2, 10, 10));
+        setLayout(new GridLayout(5, 2, 10, 10));  // Changed from 4 to 5 rows
 
         add(new JLabel("Username:"));
         usernameField = new JTextField();
@@ -275,13 +346,25 @@ class RegisterPage extends JFrame {
         add(new JLabel("Password:"));
         passwordField = new JPasswordField();
         add(passwordField);
+        
+        add(new JLabel("Confirm Password:"));
+        confirmPasswordField = new JPasswordField();
+        add(confirmPasswordField);
 
         registerButton = new JButton("Register");
         registerButton.addActionListener(e -> registerUser());
         add(registerButton);
+        
+        JButton backButton = new JButton("Back to Login");
+        backButton.addActionListener(e -> {
+            new LoginPage();
+            this.dispose();
+        });
+        add(backButton);
 
         statusLabel = new JLabel();
         add(statusLabel);
+        add(new JLabel());  // Empty label for layout balance
 
         setVisible(true);
     }
@@ -289,6 +372,13 @@ class RegisterPage extends JFrame {
     private void registerUser() {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
+        String confirmPassword = new String(confirmPasswordField.getPassword());
+        
+        // Check if passwords match
+        if (!password.equals(confirmPassword)) {
+            statusLabel.setText("Passwords do not match!");
+            return;
+        }
 
         List<User> users = new ArrayList<>();
         File file = new File("users.txt");
@@ -340,9 +430,18 @@ class RegisterPage extends JFrame {
         // Add new user
         try (FileWriter writer = new FileWriter(file, true)) {
             writer.write(username + ":" + password + "\n");
+            statusLabel.setText("Registration successful!");
+            
+            // Automatically go to login page after 2 seconds
+            Timer timer = new Timer(2000, e -> {
+                new LoginPage();
+                this.dispose();
+            });
+            timer.setRepeats(false);
+            timer.start();
+            
         } catch (IOException e) {
             statusLabel.setText("Error saving user.");
-            return;
         }
     }
 }
