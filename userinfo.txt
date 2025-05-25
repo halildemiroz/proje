@@ -1,0 +1,15 @@
+halil:asdasd:Male:asdasd:Computer
+halil:asda:Male:asdasd:Computer
+a:a:Male:a:Computer
+a:a:Male:a:Computer
+a:a:Male:a:Computer
+a:a:Male:a:Computer
+a:a:Male:a:Computer
+a:a:Male:a:Software
+a:a:Male:a:Computer
+a:a:Male:a:Computer
+a:a:Male:a:Computer
+a:a:Male:a:Computer
+a:a:Male:a:Computer
+a:a:Male:a:Computer
+a:a:Male:aa:Software Engineering

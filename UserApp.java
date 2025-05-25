@@ -2,6 +2,7 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.*;
 import javax.swing.*;
+import javax.swing.border.Border;
 
 public class UserApp extends JFrame {
     CardLayout card = new CardLayout();
@@ -15,7 +16,6 @@ public class UserApp extends JFrame {
     JPasswordField registerPassword = new JPasswordField(15);
     JPasswordField registerConfirmPassword = new JPasswordField(15);
     JTextArea registerStatus = new JTextArea();
-
     JLabel welcomeLabel = new JLabel("Welcome!");
 
     // New fields for additional user info
@@ -24,7 +24,7 @@ public class UserApp extends JFrame {
     JRadioButton femaleRadio = new JRadioButton("Female");
     ButtonGroup genderGroup = new ButtonGroup();
     JTextField nameField = new JTextField(15);
-    JComboBox<String> departmentBox = new JComboBox<>(new String[]{"Computer", "Software", "Math"});
+    JComboBox<String> departmentBox = new JComboBox<>(new String[]{"Computer Engineering", "Software Engineering", "Mathematics", "Physics", "Engineering"});
     JLabel infoStatus = new JLabel();
 
     String currentUser = "";
@@ -69,11 +69,9 @@ public class UserApp extends JFrame {
         JList<String> userList = new JList<>(userListModel);
         JButton deleteUserButton = new JButton("Delete Selected User");
         JButton adminBackButton = new JButton("Back to Login");
-    
         JPanel adminButtonsPanel = new JPanel(new FlowLayout());
         adminButtonsPanel.add(deleteUserButton);
         adminButtonsPanel.add(adminBackButton);
-
         adminPanel.add(new JLabel("Admin Panel - User Management", SwingConstants.CENTER), BorderLayout.NORTH);
         adminPanel.add(new JScrollPane(userList), BorderLayout.CENTER);
         adminPanel.add(adminButtonsPanel, BorderLayout.SOUTH);
@@ -87,8 +85,15 @@ public class UserApp extends JFrame {
         });
 
         // Welcome Panel
-        JPanel welcomePanel = new JPanel();
+        JPanel welcomePanel = new JPanel(new BorderLayout());
+        JButton welcomeBackButton = new JButton("Back to Info Page");
         welcomePanel.add(welcomeLabel);
+        welcomePanel.add(welcomeBackButton, BorderLayout.PAGE_END);
+        
+        // Add action listener to welcome back button
+        welcomeBackButton.addActionListener(e -> {
+            card.show(mainPanel, "info");
+        });
 
         // Info Panel
         JPanel infoPanel = new JPanel(new GridLayout(10, 1));
@@ -161,17 +166,14 @@ public class UserApp extends JFrame {
             registerStatus.setText("Passwords do not match!");
             return;
         }
-
         if (password.length() < 8) {
             registerStatus.setText("Password too short.");
             return;
         }
-
         if (!password.matches(".*[A-Z].*")) {
             registerStatus.setText("Password must contain at least one uppercase letter.");
             return;
         }
-        
         if(!password.matches(".*[a-z].*")){
             registerStatus.setText("Password must contain at least one lowercase letter.");
             return;
@@ -180,17 +182,14 @@ public class UserApp extends JFrame {
             registerStatus.setText("Password must contain at least one special character.");
             return;
         }
-        
         if(!password.matches(".*[0-9].*")){
             registerStatus.setText("Password must contain at least one number.");
             return;
         }
-
         if (checkUser(username, password)) {
             registerStatus.setText("User already exists.");
             return;
         }
-
         try (FileWriter fw = new FileWriter("users.txt", true)) {
             fw.write(username + ":" + password + "\n");
             registerStatus.setText("Registration successful!");
